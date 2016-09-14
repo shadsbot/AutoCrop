@@ -4,6 +4,7 @@ from tkinter import *
 from tkinter.filedialog import askopenfilename
 from PIL import Image
 from tkinter import messagebox
+from tkinter import ttk
 
 # Where to stop, cropx, cropy, space
 file = 0
@@ -19,7 +20,7 @@ def autocropit():
 	# repeat.get() 				How many times to repeat the crop
 	# direction.get() 			"Horizontally" "Vertically" or "Both"
 	# file 						Returns path to file
-
+	print(om.get())
 	print("Loading file:  %s" % file)
 	# Load the file
 	original = Image.open(file)
@@ -31,19 +32,19 @@ def autocropit():
 		x = int(startx.get())
 		loopsx = 0
 		loopsy = 0
-		if direction.get() == "Horizontally" or direction.get() == "Both":
+		if om.get() == "Horizontally" or direction.get() == "Both":
 			while x < original.size[0]:
 				loopsx += 1
 				x += int(cropx.get()) + int(space.get())
 			x = 0
 			letsRepeat = loopsx
-		if direction.get() == "Vertically" or direction.get() == "Both":
+		if om.get() == "Vertically" or direction.get() == "Both":
 			while x < original.size[1]:
 				loopsy += 1
 				x = x + int(cropx.get()) + int(space.get())
 			letsRepeat = loopsy
 		# Take the smaller of the two so as not to overflow
-		if direction.get() == "Both":
+		if om.get() == "Both":
 			if loopsx > loopsy:
 				letsRepeat = loopsy
 			else:
@@ -63,11 +64,11 @@ def autocropit():
 			copy = original.crop((locx,locy,locx+int(cropx.get()),locy+int(cropy.get()))).save("%s.png" % counter)
 		except:
 			print("It didn't work")
-		if direction.get() == "Horizontally":
+		if om.get() == "Horizontally":
 			locx = locx + int(cropx.get()) + int(space.get())
-		if direction.get() == "Vertically":
+		if om.get() == "Vertically":
 			locy = locy + int(cropy.get()) + int(space.get())
-		if direction.get() == "Both":
+		if om.get() == "Both":
 			print("I have yet to incorporate this! Sorry!")
 
 	messagebox.showinfo("All Set!","The image has been cropped to your specifications.")		
@@ -155,10 +156,13 @@ fourthRow.pack(anchor=W)
 ##
 # Direction
 ##
+direction = StringVar(options)  # I need to double check that these do nothing
+direction.set("Horizontally")   # But I don't have the time right now
 
-direction = StringVar(options)
-direction.set("Horizontally")
-om = OptionMenu(options, direction, "Horizontally","Vertically","Both")
+directionset = ("Horizontally","Vertically","Both")
+om = ttk.Combobox(options, values=directionset, state='readonly')
+om.current(0)
+
 om.pack(anchor=W,pady=padyval)
 
 ##

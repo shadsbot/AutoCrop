@@ -2,9 +2,10 @@
 
 from tkinter import *
 from tkinter.filedialog import askopenfilename
-from PIL import Image
+from PIL import Image, ImageTk
 from tkinter import messagebox
 from tkinter import ttk
+import io
 
 # Where to stop, cropx, cropy, space
 file = 0
@@ -77,9 +78,12 @@ def autocropit():
 
 def clear_label_image():
 	try:
-		label.image.blank()
-		label.image = None
-		options.update()
+		label.configure(image='')
+		label2.configure(image='')
+		label3.configure(image='')
+		label.image=''
+		label2.image=''
+		label3.image=''
 	except:
 		print("Is a field set to null?")
 def keyup(e):
@@ -162,7 +166,6 @@ direction.set("Horizontally")   # But I don't have the time right now
 directionset = ("Horizontally","Vertically","Both")
 om = ttk.Combobox(options, values=directionset, state='readonly')
 om.current(0)
-
 om.pack(anchor=W,pady=padyval)
 
 ##
@@ -192,15 +195,65 @@ def genpreview():
 	locy = int(starty.get())
 	original = Image.open(file)
 	original.load()
-	copy = original.crop((locx,locy,locx+int(cropx.get()),locy+int(cropy.get()))).save("preview.png")
-	prev = PhotoImage(file='preview.png')
-	global label
-	label = Label(options, image=prev)
-	label.configure(image=prev)
-	label.place(anchor=E, x=300, y=160)
-	label.image = prev
+	
+	pos1 = io.BytesIO()
+	pos2 = io.BytesIO()
+	pos3 = io.BytesIO()
+	pos4 = io.BytesIO()
 
+	copy =  original.crop((locx,
+		locy,
+		locx+int(cropx.get()),
+		locy+int(cropy.get()))).save(pos1,format="PNG")
 
+	spaceaddx = int(space.get()) + int(cropx.get())
+	spaceaddy = int(space.get()) + int(cropy.get())
+
+	copy2 = original.crop((locx+spaceaddx,					#locx+int(cropx.get())+int(space.get()),
+			locy,
+			locx+spaceaddx+int(cropx.get()),
+			locy+int(cropy.get()))).save(pos2,format="PNG")
+
+	copy3 = original.crop((locx,
+		locy+spaceaddy,						#locy+int(cropx.get())+int(space.get()),
+		locx+int(cropx.get()),
+		locy+spaceaddy+int(cropy.get()))).save(pos3,format="PNG")
+
+	# Not even gonna bother with copy4 rn
+	
+	pos1.seek(0)
+	pos2.seek(0)
+	pos3.seek(0)
+
+	pos1 = Image.open(pos1)
+	pos2 = Image.open(pos2)
+	pos3 = Image.open(pos3)
+
+	if om.get() == "Horizontally":
+		pos3 = pos3.convert('LA')
+	if om.get() == "Vertically":
+		pos2 = pos2.convert('LA')
+
+	prev = [ ImageTk.PhotoImage(pos1), ImageTk.PhotoImage(pos2), ImageTk.PhotoImage(pos3) ]
+
+	xpos = 250
+	ypos = 100
+
+	global label, label2, label3, label4
+
+	label = Label(options, image=prev[0])
+	label.place(anchor=E, x=xpos, y=ypos)
+	label.image = prev[0]
+	label2 = Label(options, image=prev[1])
+	label2.place(anchor=E, x=xpos+int(cropx.get())+int(space.get()), y=ypos)
+	label2.image = prev[1]
+	label3 = Label(options, image=prev[2])
+	label3.place(anchor=E, x=xpos, y=ypos+int(cropy.get())+int(space.get()))
+	label3.image = prev[2]
+
+	label.configure(image=prev[0])
+	label2.configure(image=prev[1])
+	label3.configure(image=prev[2])
 
 options.pack()
 options.focus_set()
